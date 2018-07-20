@@ -18,6 +18,9 @@ let arr = [
   [0, 0, 0, 1, 1, 0, 1]
 ]
 
+let ROWS_LENGTH = arr.length
+let COLUMNS_LENGTH = arr[0].length
+
 let columns = 'ABCDEFG'.split('')
 
 // Create the column nodes and link them all from left to right
@@ -51,8 +54,8 @@ arr.forEach((rows, row) => {
 
       // The last row, bind whatever value back to the top
       if (isLastRow) {
-        dancingNode.down = dancingNode.c
-        dancingNode.down.top = dancingNode
+        columnNode.down = columnNode.c
+        columnNode.down.top = columnNode
       }
     }
 

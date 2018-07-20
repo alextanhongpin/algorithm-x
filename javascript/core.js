@@ -19,8 +19,8 @@ function cover (column) {
   c.right.left = c.left
   for (let i = c.down; i && i !== c; i = i.down) {
     for (let j = i.right; j && j !== i; j = j.right) {
-      j.down.top = j.top
-      j.top.down = j.down
+      if (j.down) j.down.top = j.top
+      if (j.top) j.top.down = j.down
     }
   }
 }
