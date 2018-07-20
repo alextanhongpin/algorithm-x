@@ -12,6 +12,7 @@ class DancingNode {
   linkLeft (leftNode) {
     this.left = leftNode
     this.left.right = this
+    leftNode.right = this
     if (this.right) this.right.left = this
   }
   linkTop (topNode) {
@@ -26,16 +27,13 @@ class DancingNode {
     }
     return node
   }
-  getColumnNode () {
-    return this.c
-  }
 }
 
 class ColumnNode extends DancingNode {
-  constructor (props) {
-    super(props)
+  constructor ({col, row, c, name}) {
+    super({col, row, c})
     this.size = 0
-    // this.name = ''
+    this.name = name
     this.c = this
   }
   toColumn (col) {

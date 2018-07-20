@@ -6,10 +6,11 @@ const {
   makeHeaderLinks,
   ROOT,
   cover,
-  uncover
+  uncover,
+  Solutions
 } = require('./core')
 
-let arr = [
+let data = [
   [0, 0, 1, 0, 1, 1, 0],
   [1, 0, 0, 1, 0, 0, 1],
   [0, 1, 1, 0, 0, 1, 0],
@@ -18,56 +19,60 @@ let arr = [
   [0, 0, 0, 1, 1, 0, 1]
 ]
 
-let ROWS_LENGTH = arr.length
-let COLUMNS_LENGTH = arr[0].length
-
 let columns = 'ABCDEFG'.split('')
 
 // Create the column nodes and link them all from left to right
 let headerLinks = makeHeaderLinks(columns)
 
-// Create the dancing nodes by connecting them to the column nodes from top to bottom and other nodes from left to right
-arr.forEach((rows, row) => {
-  let leftNode
-  let leftNodes = []
-  const isLastRow = row === arr.length - 1
-  rows.forEach((i, colIndex) => {
-    const isLastColumn = colIndex === rows.length - 1
-    let col = columns[colIndex]
-    if (i === 1) {
-      let columnNode = headerLinks.toColumn(col)
-      let c = headerLinks.toColumn(col)
+for (let i = 0, maxRows = data.length; i < maxRows; i += 1) {
+  let row = i
+  let rows = data[row]
+  let prevNodes = []
+  let isLastRow = i === maxRows - 1
 
-      // Increment the size
+  for (let j = 0, maxCols = rows.length; j < maxCols; j += 1) {
+    let column = rows[j]
+    let isOne = column === 1
+    let isLastColumn = j === maxCols - 1
+
+    if (isOne) {
+      let columnKey = columns[j]
+      let columnNode = headerLinks.toColumn(columnKey)
       columnNode.size += 1
 
-      // Go to the most bottom node
-      columnNode = columnNode.toBottom()
+      let newNode = new DancingNode({
+        row,
+        col: columnKey,
+        c: columnNode
+      })
 
-      let dancingNode = new DancingNode({ col, row, c })
-      dancingNode.linkTop(columnNode)
-      if (leftNode) {
-        dancingNode.linkLeft(leftNode)
+      if (prevNodes.length > 0) {
+        let prevNode = prevNodes[prevNodes.length - 1]
+        newNode.linkLeft(prevNode)
       }
-      leftNode = dancingNode
-      leftNodes.push(leftNode)
+      let bottomNode = columnNode.toBottom()
+      newNode.linkTop(bottomNode)
 
-      // The last row, bind whatever value back to the top
-      if (isLastRow) {
-        columnNode.down = columnNode.c
-        columnNode.down.top = columnNode
-      }
+      prevNodes.push(newNode)
+    }
+
+    if (isLastRow) {
+      let columnKey = columns[j]
+      let columnNode = headerLinks.toColumn(columnKey)
+      let bottomNode = columnNode.toBottom()
+
+      bottomNode.down = bottomNode.c
+      bottomNode.down.top = bottomNode
     }
 
     if (isLastColumn) {
-      // Is the last column, bind back to the first one
-      if (leftNodes.length > 1) {
-        leftNode.right = leftNodes[0]
-        leftNode.right.left = leftNode
-      }
+      let lastNode = prevNodes[prevNodes.length - 1]
+      let firstNode = prevNodes[0]
+      lastNode.right = firstNode
+      lastNode.right.left = lastNode
     }
-  })
-})
+  }
+}
 
 // Example traversing down the 'A' column nodes
 columns.forEach(col => {
@@ -82,68 +87,66 @@ columns.forEach(col => {
     }
     node = node.down
   }
-  console.log('Column', columnNode.col, rows)
+  console.log('Column', columnNode.col, rows, columnNode.size)
 })
-
-function Solutions () {
-  let solutions = {}
-  return {
-    add (k, node) {
-      console.log(k)
-      if (!solutions[k]) {
-        solutions[k] = []
-      }
-      solutions[k].push(node)
-    },
-    remove (k) {
-      let o = solutions[k]
-      delete solutions[k]
-      return o
-    },
-    print () {
-      Object.entries(solutions).forEach(([i, sols]) => {
-        sols.forEach((sol) => {
-          let node = sol
-          let output = []
-          while (node && node.col !== ROOT) {
-            output.push(node.col)
-            node = node.right
-          }
-          console.log(`sol ${i}: ${output.join(' ')} [row:col] [${sol.row + 1}:${sol.col}]`)
-        })
-      })
-    }
-  }
-}
 
 let solution = Solutions()
 
-let c = headerLinks
-
-function search (k = 0) {
-  c = c.right
-  console.log('start search', k, c.col)
-  if (c.col === ROOT) {
-    solution.print()
-    return
-  }
-  cover(c)
-  for (let row = c.down; row && row !== c; row = row.down) {
-    console.log('k', k, row.row, row.col)
-    let key = `${k}:${row.col}:${row.row}`
-    solution.add(key, row)
-    for (let rightNode = row.right; rightNode && rightNode !== row; rightNode = rightNode.right) {
-      cover(rightNode)
-    }
-    search(k + 1)
-    row = solution.remove(key)
-    c = row.c
-
-    for (let leftNode = row.left; leftNode && leftNode !== row; leftNode = leftNode.left) {
-      uncover(leftNode)
+function selectColumnNodeHeuristic (h) {
+  let s = Infinity
+  let c = h.right
+  for (let j = h.right; j !== h; j = j.right) {
+    if (j.size < s && j.size > 0) {
+      s = j.size
+      console.log(s)
+      c = j
     }
   }
-  uncover(c)
+  return c
 }
 
-search()
+function search (k = 0, c) {
+  // If R[h] = h, print the current solution (see below) and return.
+  if (headerLinks.right === headerLinks) {
+    return solution.print()
+  }
+
+  // Choose a column object c
+  // c = selectColumnNodeHeuristic(headerLinks)
+  c = c.right
+
+  console.log()
+  console.log(`[search] k=${k} col=${c.col} size=${c.size}`)
+
+  // Cover column c
+  cover(c)
+
+  // For each r ← D[c], D[D[c]], . . . , while r != c
+  for (let r = c.down; r !== c; r = r.down) {
+    // set Ok ← r
+    solution.add(r)
+
+    // for each j ← R[r], R[R[r]], . . . , while j != r
+    for (let j = r.right; j !== r; j = j.right) {
+      // cover column j
+      cover(j)
+    }
+
+    // search(k + 1);
+    search(k + 1, c)
+
+    // set r ← Ok and c ← C[r];
+    r = solution.remove()
+    c = r.c
+
+    // for each j ← L[r], L[L[r]], . . . , while j != r
+    for (let j = r.left; j !== r; j = j.left) {
+      // uncover column j
+      uncover(j)
+    }
+  }
+  // Uncover column c and return
+  return uncover(c)
+}
+
+search(0, headerLinks)
