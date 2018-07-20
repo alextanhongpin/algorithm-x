@@ -3,7 +3,10 @@ const {
 } = require('./node')
 
 const {
-  makeHeaderLinks
+  makeHeaderLinks,
+  ROOT,
+  cover,
+  uncover
 } = require('./core')
 
 let arr = [
@@ -23,74 +26,121 @@ let headerLinks = makeHeaderLinks(columns)
 // Create the dancing nodes by connecting them to the column nodes from top to bottom and other nodes from left to right
 arr.forEach((rows, row) => {
   let leftNode
+  let leftNodes = []
+  const isLastRow = row === arr.length - 1
   rows.forEach((i, colIndex) => {
+    const isLastColumn = colIndex === rows.length - 1
     let col = columns[colIndex]
     if (i === 1) {
       let columnNode = headerLinks.toColumn(col)
+      let c = headerLinks.toColumn(col)
+
       // Increment the size
       columnNode.size += 1
 
       // Go to the most bottom node
       columnNode = columnNode.toBottom()
 
-      let dancingNode = new DancingNode({ col, row })
+      let dancingNode = new DancingNode({ col, row, c })
       dancingNode.linkTop(columnNode)
       if (leftNode) {
         dancingNode.linkLeft(leftNode)
       }
       leftNode = dancingNode
+      leftNodes.push(leftNode)
+
+      // The last row, bind whatever value back to the top
+      if (isLastRow) {
+        dancingNode.down = dancingNode.c
+        dancingNode.down.top = dancingNode
+      }
+    }
+
+    if (isLastColumn) {
+      // Is the last column, bind back to the first one
+      if (leftNodes.length > 1) {
+        leftNode.right = leftNodes[0]
+        leftNode.right.left = leftNode
+      }
     }
   })
 })
 
 // Example traversing down the 'A' column nodes
-
 columns.forEach(col => {
   let columnNode = headerLinks.toColumn(col)
-  console.log('columnNode.size', columnNode.size)
   let node = columnNode.down
-  while (node) {
-    console.log('columnNode(row, col)', node.row, node.col)
+  let rows = []
+  while (node && node !== columnNode) {
+    rows.push(node.row)
+    let right = node.right
+    while (right && right !== node) {
+      right = right.right
+    }
     node = node.down
   }
-  console.log()
+  console.log('Column', columnNode.col, rows)
 })
 
-let output = []
-function search (k = 0) {
-// Traverse to the right until
-  let c = headerLinks.right
-  // If R[h] = h
-  while (c && c.col !== 'h') {
-    // Cover column c
-    let x = c
-    c.left.right = c.right
-    c.right.left = c.left
-
-    let r = c.down
-    while (r) {
-      // o is the possible output
-      let o = r
-      output.push(o.col)
-      let j = r.right
-
-      while (j) {
-        // cover(j)
-        j = j.right
+function Solutions () {
+  let solutions = {}
+  return {
+    add (k, node) {
+      console.log(k)
+      if (!solutions[k]) {
+        solutions[k] = []
       }
-      search(k + 1)
-      r = r.down
-      // uncover(j)
+      solutions[k].push(node)
+    },
+    remove (k) {
+      let o = solutions[k]
+      delete solutions[k]
+      return o
+    },
+    print () {
+      Object.entries(solutions).forEach(([i, sols]) => {
+        sols.forEach((sol) => {
+          let node = sol
+          let output = []
+          while (node && node.col !== ROOT) {
+            output.push(node.col)
+            node = node.right
+          }
+          console.log(`sol ${i}: ${output.join(' ')} [row:col] [${sol.row + 1}:${sol.col}]`)
+        })
+      })
     }
-
-    // uncover(c)
-    c.left.right = x
-    c.right.left = x
-
-    c = c.right
   }
 }
 
-search()
+let solution = Solutions()
 
-console.log('output', new Set(output))
+let c = headerLinks
+
+function search (k = 0) {
+  c = c.right
+  console.log('start search', k, c.col)
+  if (c.col === ROOT) {
+    solution.print()
+    return
+  }
+  cover(c)
+  for (let row = c.down; row && row !== c; row = row.down) {
+    console.log('k', k, row.row, row.col)
+    let key = `${k}:${row.col}:${row.row}`
+    solution.add(key, row)
+    for (let rightNode = row.right; rightNode && rightNode !== row; rightNode = rightNode.right) {
+      cover(rightNode)
+    }
+    search(k + 1)
+    row = solution.remove(key)
+    c = row.c
+
+    for (let leftNode = row.left; leftNode && leftNode !== row; leftNode = leftNode.left) {
+      uncover(leftNode)
+    }
+  }
+  uncover(c)
+}
+
+search()
