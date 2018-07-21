@@ -32,6 +32,11 @@ class ColumnNode extends DancingNode {
     this.S = 0
     this.N = name
     this.C = this
+
+    if (name === 'h') {
+      this.U = this
+      this.D = this
+    }
   }
   toColumn (name) {
     let node = this

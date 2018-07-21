@@ -24,25 +24,65 @@ function initializeHeaders (columns = []) {
   return h
 }
 
+function initializeGrid (size) {
+  let grid = []
+  for (let row = 0; row < size; row += 1) {
+    grid[row] = []
+    for (let col = 0; col < size; col += 1) {
+      grid[row].push(0)
+    }
+  }
+  return grid
+}
+
+function printSolutionSudoku (o = []) {
+  if (!o.length) {
+    console.log('[solution] not found')
+  }
+  let grid = initializeGrid(9)
+  o.forEach((c) => {
+    let row = c._row
+    let col = c._col
+    let val = c._val
+    grid[row][col] = val
+  })
+  // let solution = grid.map((row) => {
+  //   return row.join(' ')
+  // }).join('\n')
+
+  // console.log(`[solution] length=${o.length}\n${solution}`)
+  console.log()
+  console.log('OUTPUT:')
+  console.log()
+  prettyPrintSolution(grid)
+  console.log()
+}
+
 function printSolution (o = []) {
   if (!o.length) {
     console.log('[solution] not found')
   }
+
   o.forEach((c) => {
-    let out = c.C.N
+    let out = [c.C.N]
     let node = c.R
     while (node !== c) {
-      out += node.C.N
+      out.push(node.C.N)
       node = node.R
     }
-    console.log('[solution]', out)
+    console.log('[solution]', out.join(' '))
   })
 }
 
 function initializeDancingLinks (h, data, columns) {
   for (let i = 0, maxRows = data.length; i < maxRows; i += 1) {
     let row = i
-    let rows = data[row]
+    let _data = data[row]
+    let rows = _data.data
+    let _row = _data.row
+    let _col = _data.col
+    let _val = _data.val
+
     let prevNodes = []
     let isLastRow = i === maxRows - 1
 
@@ -56,6 +96,9 @@ function initializeDancingLinks (h, data, columns) {
         columnNode.S += 1
 
         let newNode = new DancingNode(columnNode)
+        newNode._row = _row
+        newNode._col = _col
+        newNode._val = _val
 
         if (prevNodes.length > 0) {
           let prevNode = prevNodes[prevNodes.length - 1]
@@ -115,9 +158,10 @@ function selectColumnNodeHeuristic (h, s = Infinity) {
   return c
 }
 
-function search (k = 0, h, s = []) {
+function search (k = 0, h, s = [], printSolutionFn = printSolution) {
   if (h.R === h) {
-    return printSolution(s)
+    console.log(`[search] state=terminate`)
+    return printSolutionFn(s)
   }
   let c = selectColumnNodeHeuristic(h)
   cover(c)
@@ -126,7 +170,8 @@ function search (k = 0, h, s = []) {
     for (let j = r.R; j !== r; j = j.R) {
       cover(j)
     }
-    search(k + 1, h, s)
+    search(k + 1, h, s, printSolutionFn)
+
     r = s.pop()
     c = r.C
     for (let j = r.L; j !== r; j = j.L) {
@@ -143,7 +188,6 @@ function cover (column) {
 
   for (let i = c.D; i !== c; i = i.D) {
     for (let j = i.R; j !== i; j = j.R) {
-      if (j.col === 'h') return
       j.D.U = j.U
       j.U.D = j.D
       j.C.S -= 1
@@ -156,8 +200,6 @@ function uncover (column) {
 
   for (let i = c.U; i !== c; i = i.U) {
     for (let j = i.L; j !== i; j = j.L) {
-      if (j.col === 'h') return
-
       j.C.S += 1
 
       j.D.U = j
@@ -168,12 +210,58 @@ function uncover (column) {
   c.L.R = c
 }
 
+function prettyPrintSolution (o) {
+  o.forEach((row, i) => {
+    if (i > 0 && i % 3 === 0) {
+      let separator = Array(7 * 3).fill('-')
+      separator[6] = '+'
+      separator[14] = '+'
+      console.log(['', separator.join(''), ''].join(' '))
+    }
+    let g1 = row.splice(0, 3).join(' ')
+    let g2 = row.splice(0, 3).join(' ')
+    let g3 = row.splice(0, 3).join(' ')
+    let columns = [g1, g2, g3].join(' | ')
+    console.log(['', columns, ''].join(' '))
+  })
+}
+
+function printConstraint (o) {
+  console.log(o.join('').replace(/0/g, '.'))
+}
+
+function Constraints (S) {
+  return {
+    cell (row, col, val) {
+      return row * S + col
+    },
+    row (row, col, val) {
+      return row * S + (val - 1)
+    },
+    col (row, col, val) {
+      return col * S + (val - 1)
+    },
+    box (row, col, val) {
+      return col * S + (val - 1)
+    }
+  }
+}
+
+function initialiseArray (S) {
+  return Array(S * S).fill(0)
+}
+
 module.exports = {
   initializeColumns,
   initializeHeaders,
   printSolution,
+  printSolutionSudoku,
   initializeDancingLinks,
   traverse,
   selectColumnNodeHeuristic,
-  search
+  search,
+  printConstraint,
+  Constraints,
+  initialiseArray,
+  prettyPrintSolution
 }

@@ -16,8 +16,19 @@ function main () {
 
   let columns = initializeColumns(data[0].length)
   let h = initializeHeaders(columns)
-  initializeDancingLinks(h, data, columns)
+  initializeDancingLinks(h, mapData(data), columns)
   search(0, h)
+}
+
+function mapData (data) {
+  return data.map((row, i) => {
+    return {
+      row: i,
+      data: row,
+      col: null,
+      val: null
+    }
+  })
 }
 
 main()
