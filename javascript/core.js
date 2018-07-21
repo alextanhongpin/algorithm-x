@@ -11,9 +11,9 @@ function initializeColumns (n) {
 }
 
 function initializeHeaders (columns = []) {
-  let h = new ColumnNode({ col: ROOT })
+  let h = new ColumnNode(ROOT)
   let last = columns.reduce((acc, col) => {
-    let node = new ColumnNode({ col, name: col })
+    let node = new ColumnNode(col)
     node.linkLeft(acc)
     return node
   }, h)
@@ -25,6 +25,9 @@ function initializeHeaders (columns = []) {
 }
 
 function printSolution (o = []) {
+  if (!o.length) {
+    console.log('[solution] not found')
+  }
   o.forEach((c) => {
     let out = c.C.N
     let node = c.R
@@ -52,11 +55,7 @@ function initializeDancingLinks (h, data, columns) {
         let columnNode = h.toColumn(columnKey)
         columnNode.S += 1
 
-        let newNode = new DancingNode({
-          row,
-          col: columnKey,
-          c: columnNode
-        })
+        let newNode = new DancingNode(columnNode)
 
         if (prevNodes.length > 0) {
           let prevNode = prevNodes[prevNodes.length - 1]
@@ -77,8 +76,7 @@ function initializeDancingLinks (h, data, columns) {
         bottomNode.D.U = bottomNode
       }
 
-      if (isLastColumn) {
-        console.log('row', row)
+      if (isLastColumn && prevNodes.length) {
         let lastNode = prevNodes[prevNodes.length - 1]
         let firstNode = prevNodes[0]
         lastNode.R = firstNode
@@ -95,14 +93,14 @@ function traverse (columns, h) {
     let node = columnNode.D
     let rows = []
     while (node && node !== columnNode) {
-      rows.push(node.row)
+      rows.push(node.C.N)
       let right = node.R
       while (right && right !== node) {
         right = right.R
       }
       node = node.D
     }
-    console.log('[traverse]', columnNode.col, rows, columnNode.S)
+    console.log('[traverse]', columnNode.N, columnNode.S, rows)
   })
 }
 

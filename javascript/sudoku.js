@@ -108,13 +108,12 @@ function main () {
     return Number(val)
   })
   let S = Math.sqrt(G.length)
-  console.log(S)
 
   let output = []
   while (G.length) {
     output.push(G.splice(0, S))
   }
-  console.log(output)
+  // console.log(output)
 
   let m = []
   for (let i = 0; i < S; i += 1) {
@@ -136,13 +135,11 @@ function main () {
     }
   }
 
-  console.log('size', m.length, m[0].length)
-
-  let columns = initializeColumns(S * S)
+  let columns = initializeColumns(S * S * 4)
   let h = initializeHeaders(columns)
   initializeDancingLinks(h, m, columns)
-  traverse(columns, h)
-  // search(0, h)
+  search(0, h)
+  // traverse(columns, h)
 }
 
 main()

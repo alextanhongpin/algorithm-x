@@ -1,12 +1,10 @@
 class DancingNode {
-  constructor ({col, row, c}) {
-    this.col = col
-    this.row = row
+  constructor (C) {
     this.U = null // up
     this.D = null // down
     this.L = null // left
     this.R = null // right
-    this.C = c
+    this.C = C // columnNode
   }
   linkLeft (leftNode) {
     this.L = leftNode
@@ -29,15 +27,15 @@ class DancingNode {
 }
 
 class ColumnNode extends DancingNode {
-  constructor ({col, row, c, name}) {
-    super({col, row, c})
+  constructor (name) {
+    super()
     this.S = 0
     this.N = name
     this.C = this
   }
-  toColumn (col) {
+  toColumn (name) {
     let node = this
-    while (node.col !== col) {
+    while (node.N !== name) {
       node = node.R
     }
     return node
