@@ -2,28 +2,28 @@ class DancingNode {
   constructor ({col, row, c}) {
     this.col = col
     this.row = row
-    this.top = null
-    this.down = null
-    this.left = null
-    this.right = null
-    this.c = c
+    this.U = null // up
+    this.D = null // down
+    this.L = null // left
+    this.R = null // right
+    this.C = c
   }
 
   linkLeft (leftNode) {
-    this.left = leftNode
-    this.left.right = this
-    leftNode.right = this
-    if (this.right) this.right.left = this
+    this.L = leftNode
+    this.L.R = this
+    leftNode.R = this
+    if (this.R) this.R.L = this
   }
   linkTop (topNode) {
-    this.top = topNode
-    this.top.down = this
-    if (this.down) this.down.top = this
+    this.U = topNode
+    this.U.D = this
+    if (this.D) this.D.U = this
   }
   toBottom () {
     let node = this
-    while (node && node.down) {
-      node = node.down
+    while (node && node.D) {
+      node = node.D
     }
     return node
   }
@@ -32,14 +32,14 @@ class DancingNode {
 class ColumnNode extends DancingNode {
   constructor ({col, row, c, name}) {
     super({col, row, c})
-    this.size = 0
-    this.name = name
-    this.c = this
+    this.S = 0
+    this.N = name
+    this.C = this
   }
   toColumn (col) {
     let node = this
     while (node.col !== col) {
-      node = node.right
+      node = node.R
     }
     return node
   }
