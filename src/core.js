@@ -170,7 +170,7 @@ function search (k = 0, h, s = [], printSolutionFn = printSolution) {
     for (let j = r.R; j !== r; j = j.R) {
       cover(j)
     }
-    search(k + 1, h, s, printSolutionFn)
+    if (search(k + 1, h, s, printSolutionFn)) return
 
     r = s.pop()
     c = r.C
@@ -242,7 +242,9 @@ function Constraints (S) {
       return col * S + (val - 1)
     },
     box (row, col, val) {
-      return col * S + (val - 1)
+      let r = 3 * Math.floor(row / 3)
+      let c = Math.floor(col / 3)
+      return (r + c) * S + (val - 1)
     }
   }
 }
