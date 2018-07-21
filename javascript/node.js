@@ -8,7 +8,6 @@ class DancingNode {
     this.R = null // right
     this.C = c
   }
-
   linkLeft (leftNode) {
     this.L = leftNode
     this.L.R = this
