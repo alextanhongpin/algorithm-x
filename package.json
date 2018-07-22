@@ -1,0 +1,29 @@
+{
+  "name": "algorithm-x",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alextanhongpin/algorithm-x.git"
+  },
+  "author": "alextanhongpin <alextan220990@gmail.com>",
+  "license": "MIT",
+  "description": "Sudoku solver implementing DLX (Dancing Links + Algorithm X) by Donald Knuth.",
+  "bugs": {
+    "url": "https://github.com/alextanhongpin/algorithm-x/issues"
+  },
+  "homepage": "https://github.com/alextanhongpin/algorithm-x#readme",
+  "scripts": {
+    "dev": "tsc --watch",
+    "test": "mocha -r ts-node/register src/**/**.test.ts"
+  },
+  "keywords": [],
+  "devDependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/mocha": "^5.2.5",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "ts-node": "^7.0.0",
+    "typescript": "^2.9.2"
+  }
+}
