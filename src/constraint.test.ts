@@ -1,5 +1,5 @@
 import * as chai from 'chai'
-import Constraint from './constraint'
+import Sudoku from './sudoku'
 
 const expect = chai.expect
 
@@ -12,7 +12,7 @@ describe('Constraint', () => {
       [8, 8, 9, 80]
     ]
     tests.forEach(([row, col, val, index]) => {
-      expect(Constraint.cell(size, row, col, val)).to.be.eq(index)
+      expect(Sudoku.constraints(size, row, col, val).cell).to.be.eq(index)
     })
   })
 
@@ -27,7 +27,7 @@ describe('Constraint', () => {
       [8, 8, 9, 80]
     ]
     tests.forEach(([row, col, val, index]) => {
-      expect(Constraint.row(size, row, col, val)).to.be.eq(index)
+      expect(Sudoku.constraints(size, row, col, val).row).to.be.eq(index)
     })
   })
 
@@ -42,7 +42,7 @@ describe('Constraint', () => {
       [1, 0, 2, 1]
     ]
     tests.forEach(([row, col, val, index]) => {
-      expect(Constraint.column(size, row, col, val)).to.be.eq(index)
+      expect(Sudoku.constraints(size, row, col, val).column).to.be.eq(index)
     })
   })
 
@@ -59,7 +59,7 @@ describe('Constraint', () => {
       [1, 0, 2, 1]
     ]
     tests.forEach(([row, col, val, index]) => {
-      expect(Constraint.box(size, row, col, val)).to.be.eq(index)
+      expect(Sudoku.constraints(size, row, col, val).box).to.be.eq(index)
     })
   })
 })

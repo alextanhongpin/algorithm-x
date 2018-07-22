@@ -1,14 +1,17 @@
+import Sudoku from './sudoku';
+import { initializeMetadata } from './model';
 import {
-  initializeHeaders,
-  initializeDancingLinks,
-  initializeColumns,
   search,
-} from './core'
+  initializeCircularDoublyLinkedToroidaList,
+  initializeColumnLabels
+} from './core';
 
-import { Row, Cell, initializeCell, Node } from './model';
-import { FgWhite, FgGreen } from './color';
+async function main() {
+  solveDancingLinks()
+  solveSudoku()
+}
 
-function main () {
+function solveDancingLinks() {
   let data: number[][] = [
     [0, 0, 1, 0, 1, 1, 0],
     [1, 0, 0, 1, 0, 0, 1],
@@ -19,59 +22,30 @@ function main () {
   ]
 
   let size = data[0].length
-  let columns = initializeColumns(size)
-  let header = initializeHeaders(columns)
-  initializeDancingLinks(header, mapData(data), columns)
-  let printer = new Printer(data, columns)
-  printer.input()
-  search(0, header, [], printer.output.bind(printer))
-}
+  let columnLabels = initializeColumnLabels(size)
+  let metadata = data.map(rows => initializeMetadata(-1, -1, -1, rows))
+  let rootNode = initializeCircularDoublyLinkedToroidaList(
+    metadata,
+    columnLabels
+  )
 
-function mapData (grid: number[][]): Row {
-  return grid.map((data: number[], row: number): Cell => {
-    return initializeCell(row, -1, -1, data)
+  let output = search(0, rootNode, [])
+  output.forEach(node => {
+    let results = [node.columnNode.name]
+    let right = node.right
+    while (right !== node) {
+      results.push(right.columnNode.name)
+      right = right.right
+    }
+    console.log(results.join(' '))
   })
 }
 
-interface IPrinter {
-  input(): void
-  output(solution: Node[]): void
+function solveSudoku() {
+  let input = '.6.3..8.4537.9.....4...63.7.9..51238.........71362..4.3.64...1.....6.5231.2..9.8.'
+
+  Sudoku.print('INPUT: ', Sudoku.fromString(input))
+  Sudoku.print('OUTPUT:', Sudoku.solve(input))
 }
 
-class Printer implements IPrinter {
-  constructor(public data: number[][], public headers: string[]) {}
-  header() {
-    console.log(FgWhite, ' ', FgWhite,  this.headers.join(' '))
-  }
-  input () {
-    console.log('INPUT:')
-    console.log()
-    this.header()
-    this.data.forEach((row, i) => {
-      let rowStr = row.map((v) => v === 0 ? '.' : '1').join(' ')
-      console.log(FgWhite, i + 1, FgGreen, rowStr)
-    })
-    console.log(FgWhite)
-  }
-  output(solution: Node[]) {
-    if (!solution.length) {
-      return console.log('[solution] not found')
-    }
-    let rows = solution.map((n: Node) => {
-      return n.metadata.row
-    }).sort()
-
-    let filtered = this.data.filter((_, i) => rows.includes(i))
-    
-    console.log('OUTPUT:')
-    console.log()
-    this.header()
-    filtered.forEach((row, i) => {
-      let rowStr = row.map((v) => v === 0 ? '.' : '1').join(' ')
-      console.log(FgWhite, rows[i] + 1, FgGreen, rowStr)
-    })
-    console.log(FgWhite)
-  }
-}
-
-main()
+main().catch(console.error)

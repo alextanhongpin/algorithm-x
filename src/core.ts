@@ -1,191 +1,191 @@
-import { 
-  ColumnNode, 
-  Cell,
+import {
   Metadata,
   Node,
   initializeRootNode,
   initializeColumnNode,
-  initializeDLXNode,
-  Row,
   initializeMetadata,
+  initializeNode,
 } from './model'
 
-export function initializeColumns (n: number): string[] {
-  let labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const ALPHABETS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+type ColumnLabels = string[]
+
+// initializeColumnLabels will create an array of labels from a given limit
+export function initializeColumnLabels(n: number): ColumnLabels {
+  let labels = [...ALPHABETS]
   if (n < labels.length) {
-    return labels.split('').slice(0, n)
+    return labels.slice(0, n)
   }
   return Array(n).fill(0).map((_, i) => (i + 1).toString())
 }
 
-export function initializeHeaders (columns: string[] = []): ColumnNode {
+export function initializeHeaderColumns(labels: ColumnLabels = []): Node {
   let rootNode = initializeRootNode()
-  let linkedColumnNode = columns.reduce((prev: Node, name: string) => {
-    return initializeColumnNode(name).linkLeft(prev)
+  let currNode = labels.reduce((prev: Node, name: string) => {
+    let curr = initializeColumnNode(name)
+    curr.left = prev
+    curr.left.right = curr
+    return curr
   }, rootNode)
-  return rootNode.linkLeft(linkedColumnNode)
+  rootNode.left = currNode
+  rootNode.left.right = rootNode
+  return rootNode
 }
 
-export function initializeGrid (size: number): number[][] {
-  return Array(size).fill([])
-    .map(() => Array(size).fill(0))
-}
+export function initializeCircularDoublyLinkedToroidaList(
+  metadata: Metadata[],
+  columnLabels: ColumnLabels
+): Node {
+  // Setup header node
+  let rootNode = initializeHeaderColumns(columnLabels)
+  let dimension = (m: Metadata[]): [number, number] =>
+    [m.length, m[0].data.length]
+  let isOne = (n: number): boolean => n === 1
+  let [maxRow, maxCol] = dimension(metadata)
+  let isLastRow = (row: number): boolean => row === maxRow - 1
+  let isLastColumn = (col: number): boolean => col === maxCol - 1
 
-export function initialiseArray (size: number): number[] {
-  return Array(size).fill(0)
-}
+  metadata.forEach((meta, row) => {
+    let _metadata = initializeMetadata(meta.column, meta.row, meta.value, [])
+    let prevNodes: Node[] = []
 
-export function printSolutionSudoku (solution: Node[] = []) {
-  let size = 9
-  if (!solution.length) {
-    return console.log('[solution] not found')
-  }
-  let grid = initializeGrid(size)
-  solution.forEach((n: Node) => {
-    let m: Metadata = n.metadata
-    let { row, col, val } = m
-    grid[row][col] = val
-  })
-  console.log()
-  console.log('OUTPUT:')
-  console.log()
-  prettyPrintSolution(grid)
-  console.log()
-}
+    meta.data.forEach((value: number, column: number) => {
+      let name = columnLabels[column]
+      if (isOne(value)) {
+        let columnNode = traverseRight(rootNode, name)
+        columnNode.size += 1
+        let node = initializeNode(columnNode, _metadata)
 
-
-export function prettyPrintSolution (solution: number[][] = []) {
-  solution.forEach((row: number[], i: number) => {
-    if (i > 0 && i % 3 === 0) {
-      let separator = Array(7 * 3).fill('-')
-      separator[6] = '+'
-      separator[14] = '+'
-      console.log('', separator.join(''), '')
-    }
-    let g1 = row.slice(0, 3).join(' ')
-    let g2 = row.slice(3, 6).join(' ')
-    let g3 = row.slice(6, 9).join(' ')
-    let columns = [g1, g2, g3].join(' | ')
-    console.log('', columns, '')
-  })
-}
-
-export function initializeDancingLinks (h: ColumnNode, grid: Row, columns: string[]) {
-  for (let row = 0, maxRow = grid.length; row < maxRow; row += 1) {
-    let cell: Cell = grid[row]
-    let { 
-      data: rows, 
-      row: _row,
-      col: _col,
-      val: _val
-    } = cell
-
-    let prevNodes = []
-    let isLastRow = row === maxRow - 1
-
-    for (let col = 0, maxCol = rows.length; col < maxCol; col += 1) {
-      let val = rows[col]
-      let isOne = val === 1
-      let isLastColumn = col === maxCol - 1
-      if (isOne) {
-        let columnName = columns[col]
-        let columnNode = h.traverseRight(columnName)
-        columnNode.S += 1
-
-        let newNode = initializeDLXNode(columnNode)
-        newNode.metadata = initializeMetadata(_row, _col, _val)
-
+        // Bind to the previous node on the left
         if (prevNodes.length > 0) {
           let prevNode = prevNodes[prevNodes.length - 1]
-          newNode.linkLeft(prevNode)
+          node.left = prevNode
+          node.left.right = node
         }
-        let bottomNode = columnNode.traverseDown()
-        newNode.linkTop(bottomNode)
 
-        prevNodes.push(newNode)
+        // Bind back to the top node
+        let bottomNode = traverseDown(columnNode)
+        node.up = bottomNode
+        node.up.down = node
+
+        prevNodes.push(node)
       }
 
-      if (isLastRow) {
-        let columnName = columns[col]
-        let columnNode = h.traverseRight(columnName)
-        let bottomNode = columnNode.traverseDown()
-
-        bottomNode.D = bottomNode.C
-        bottomNode.D.U = bottomNode
+      // Link top and bottom nodes together
+      if (isLastRow(row)) {
+        let lastNode = traverseRight(rootNode, name)
+        let bottomNode = traverseDown(lastNode)
+        bottomNode.down = bottomNode.columnNode
+        bottomNode.down.up = bottomNode
       }
 
-      if (isLastColumn && prevNodes.length) {
+      // Link left and right nodes together
+      if (isLastColumn(column) && prevNodes.length) {
         let lastNode = prevNodes[prevNodes.length - 1]
         let firstNode = prevNodes[0]
-        lastNode.R = firstNode
-        lastNode.R.L = lastNode
+        lastNode.right = firstNode
+        lastNode.right.left = lastNode
       }
-    }
-  }
+    })
+  })
+  return rootNode
 }
 
-export function selectColumnNodeHeuristic (h: ColumnNode, s: number = Infinity) {
-  let c = h.R
-  for (let j = h.R; j !== h; j = j.R) {
-    // Select column with the smallest size
-    if (j.S < s) {
-      s = j.S
+export function smallestColumnSize(
+  rootNode: Node,
+  size: number = Infinity
+) {
+  let c = rootNode.right
+  for (let j = rootNode.right; j !== rootNode; j = j.right) {
+    if (j.size < size) {
+      size = j.size
       c = j
     }
   }
   return c
 }
 
-export function search (
-  k: number = 0, 
-  h: ColumnNode, 
-  s: Node[] = [], 
-  callback: Function
-) {
-  if (h.R === h) {
-    console.log('[terminate] complete')
-    // printSolution, etc
-    return callback(s)
+function debug(depth: number, output: Node[]) {
+  output.forEach(node => {
+    let results = [node.columnNode.name]
+    let right = node.right
+    while (right !== node) {
+      results.push(right.columnNode.name)
+      right = right.right
+    }
+    console.log(depth, results.join(' '))
+  })
+}
+
+export function search(
+  depth: number = 0,
+  rootNode: Node,
+  solution: Node[] = [],
+): Node[] {
+  // Termination condition
+  if (rootNode.right === rootNode) {
+    // Return a copy without pointing back to the reference,
+    // as the values might be replaced
+    return [...solution]
   }
-  let c = selectColumnNodeHeuristic(h)
+  // Start with the smallest column node to minimize search
+  let c = smallestColumnSize(rootNode)
   cover(c)
-  for (let r = c.D; r !== c; r = r.D) {
-    s.push(r)
-    for (let j = r.R; j !== r; j = j.R) {
+  for (let r = c.down; r !== c; r = r.down) {
+    solution.push(r)
+    for (let j = r.right; j !== r; j = j.right) {
       cover(j)
     }
-    search(k + 1, h, s, callback)
-    r = s.pop() || r
-    c = r.C
-    for (let j = r.L; j !== r; j = j.L) {
+    let result = search(depth + 1, rootNode, solution)
+    if (result) return result
+    r = solution.pop() || r
+    c = r.columnNode
+    for (let j = r.left; j !== r; j = j.left) {
       uncover(j)
     }
   }
   uncover(c)
 }
 
-export function cover (column: Node): void {
-  let c = column.C
-  c.R.L = c.L
-  c.L.R = c.R
-  for (let i = c.D; i !== c; i = i.D) {
-    for (let j = i.R; j !== i; j = j.R) {
-      j.D.U = j.U
-      j.U.D = j.D
-      j.C.S -= 1
+function cover(node: Node): void {
+  let columnNode = node.columnNode
+  columnNode.right.left = columnNode.left
+  columnNode.left.right = columnNode.right
+  for (let i = columnNode.down; i !== columnNode; i = i.down) {
+    for (let j = i.right; j !== i; j = j.right) {
+      j.down.up = j.up
+      j.up.down = j.down
+      j.columnNode.size -= 1
     }
   }
 }
 
-export function uncover (column: Node): void {
-  let c = column.C
-  for (let i = c.U; i !== c; i = i.U) {
-    for (let j = i.L; j !== i; j = j.L) {
-      j.C.S += 1
-      j.D.U = j
-      j.U.D = j
+function uncover(node: Node): void {
+  let columnNode = node.columnNode
+  for (let i = columnNode.up; i !== columnNode; i = i.up) {
+    for (let j = i.left; j !== i; j = j.left) {
+      j.columnNode.size += 1
+      j.down.up = j
+      j.up.down = j
     }
   }
-  c.R.L = c
-  c.L.R = c
+  columnNode.right.left = columnNode
+  columnNode.left.right = columnNode
+}
+
+function traverseDown(rootNode: Node): Node {
+  let node = rootNode
+  while (node && node.down && node.down !== node) {
+    node = node.down
+  }
+  return node
+}
+
+function traverseRight(rootNode: Node, name: string): Node {
+  let node = rootNode
+  while (node.name !== name && node.right !== node) {
+    node = node.right
+  }
+  return node
 }

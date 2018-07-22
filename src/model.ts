@@ -1,95 +1,55 @@
 const ROOT = 'h'
 
-// Cell
-export interface Cell {
-  col: number;
-  row: number;
-  val: number;
-  data: any;
-}
-
-export type Row = Cell[]
-
-export function initializeCell(
-  row: number, 
-  col: number,
-  val: number,
-  data: any
-): Cell {
-  return { row, col, val, data }
-}
-
-// Metadata
+// Metadata holds additional information for a particular box
 export interface Metadata {
-  col: number;
+  column: number;
   row: number;
-  val: number;
+  value: number;
+  data: number[]
 }
 
 export function initializeMetadata(
-  row: number, 
-  col: number, 
-  val: number
+  column: number,
+  row: number,
+  value: number,
+  data: number[]
 ): Metadata {
-  return { row, col, val }
+  return { row, column, value, data }
+}
+
+function nullMetadata(): Metadata {
+  return { row: 0, column: 0, value: -1, data: [] }
 }
 
 export class Node {
-  U: Node; // Up
-  D: Node; // Down
-  L: Node; // Left
-  R: Node; // Right
-  C: Node; // ColumnNode
-  N: string = ''; // Name
-  S: number = 0; // Size
-  metadata: Metadata = {row: 0, col: 0, val: 0}
+  up: Node;
+  down: Node;
+  left: Node;
+  right: Node;
+  columnNode: Node;
+  name: string = '';
+  size: number = 0;
+  metadata: Metadata = nullMetadata();
   constructor() {
-    this.U = this.D = this.L = this.R = this.C = this
-  }
-  traverseDown (): Node {
-    let node: Node = this
-    while (node && node.D && node.D !== node) {
-      node = node.D
-    }
-    return node
-  }
-  traverseRight(name: string): Node {
-    let node: Node = this
-    while (node.N !== name && node.R && node.R !== node) {
-      node = node.R
-    }
-    return node
-  }
-  linkLeft (l: Node): Node {
-    this.L = l
-    this.L.R = this
-    return this
-  }
-  linkTop (u: Node): Node {
-    this.U = u
-    this.U.D = this
-    return this
+    this.columnNode = this.up = this.down = this.left = this.right = this
   }
 }
 
-// DLXNode
-export class DLXNode extends Node {
-  constructor (public C: ColumnNode) { super() }
+export function initializeNode(columnNode: Node, metadata: Metadata): Node {
+  let node = new Node()
+  node.columnNode = columnNode
+  node.metadata = metadata
+  return node
 }
 
-export function initializeDLXNode(C: ColumnNode): DLXNode {
-  return new DLXNode(C)
+export function initializeColumnNode(name: string): Node {
+  let node = new Node()
+  node.name = name
+  return node
 }
 
-// ColumnNode
-export class ColumnNode extends Node {
-  constructor (public readonly N: string) { super() }
-}
-
-export function initializeColumnNode(name: string): ColumnNode {
-  return new ColumnNode(name)
-}
-
-export function initializeRootNode(): ColumnNode {
-  return new ColumnNode(ROOT)
+export function initializeRootNode(): Node {
+  let node = new Node()
+  node.name = ROOT
+  return node
 }
