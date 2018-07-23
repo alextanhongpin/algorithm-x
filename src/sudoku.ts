@@ -144,4 +144,9 @@ export default class Sudoku {
     })
     return List.flatten<number>(matrices)
   }
+  static toString(output: number[][]): string {
+    return output.map(rows =>
+      rows.map(i => i === Sudoku.EMPTY ? Sudoku.DOT : i).join('')
+    ).join('')
+  }
 }

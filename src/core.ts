@@ -106,18 +106,6 @@ export function smallestColumnSize(
   return c
 }
 
-function debug(depth: number, output: Node[]) {
-  output.forEach(node => {
-    let results = [node.columnNode.name]
-    let right = node.right
-    while (right !== node) {
-      results.push(right.columnNode.name)
-      right = right.right
-    }
-    console.log(depth, results.join(' '))
-  })
-}
-
 export function search(
   depth: number = 0,
   rootNode: Node,

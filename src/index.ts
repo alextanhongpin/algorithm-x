@@ -42,10 +42,18 @@ function solveDancingLinks() {
 }
 
 function solveSudoku() {
-  let input = '.6.3..8.4537.9.....4...63.7.9..51238.........71362..4.3.64...1.....6.5231.2..9.8.'
-
-  Sudoku.print('INPUT: ', Sudoku.fromString(input))
-  Sudoku.print('OUTPUT:', Sudoku.solve(input))
+  let inputs = [
+    '.6.3..8.4537.9.....4...63.7.9..51238.........71362..4.3.64...1.....6.5231.2..9.8.',
+    '.......12........3..23..4....18....5.6..7.8.......9.....85.....9...4.5..47...6...'
+  ]
+    
+  inputs.map((input, i) => {
+    console.time('benchmark')
+    Sudoku.print(`INPUT ${i + 1}:`, Sudoku.fromString(input))
+    Sudoku.print(`OUTPUT ${i + 1}:`, Sudoku.solve(input))
+    console.timeEnd('benchmark')
+    console.log(`STRING ${i + 1}:`, Sudoku.toString(Sudoku.solve(input)))
+  })
 }
 
 main().catch(console.error)
