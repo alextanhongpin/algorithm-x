@@ -138,7 +138,6 @@ export function* search(
     }
   }
   uncover(c)
-
 }
 
 function cover(node: Node): void {

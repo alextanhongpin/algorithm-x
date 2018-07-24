@@ -30,7 +30,6 @@ function solveDancingLinks() {
   )
 
   for (let output of search(0, rootNode, [])) {
-    if (!output.length) continue
     output.forEach(node => {
       let results = [node.columnNode.name]
       let right = node.right
