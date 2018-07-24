@@ -26,7 +26,7 @@ export default class Sudoku {
     const [FIRST, SECOND] = [3, 7]
     let parsedRow = [...input].map((rows) => {
       let c: (string | number)[] = [...rows].map(
-        i => i === Sudoku.EMPTY ? Sudoku.DOT : i
+        i => (i === Sudoku.EMPTY || i === 0) ? Sudoku.DOT : i
       )
       c.splice(FIRST, 0, Sudoku.VERTICAL)
       c.splice(SECOND, 0, Sudoku.VERTICAL)
@@ -83,18 +83,24 @@ export default class Sudoku {
     return constraintMatrix
   }
 
-  static solver(input: Metadata[]): Node[] {
+  static solver(input: Metadata[]) {
     let columns = initializeColumnLabels(Sudoku.SIZE * Sudoku.SIZE * 4)
     let rootNode = initializeCircularDoublyLinkedToroidaList(input, columns)
     return search(0, rootNode, [])
   }
 
-  static solve(input: string): number[][] {
+  static solve(input: string) {
     let solutions = [input]
       .map(Sudoku.fromString)
       .map(Sudoku.parseCells)
       .map(Sudoku.solver)
-      .map(Sudoku.parseSolution)
+      .map(function (solution) {
+        let o = []
+        for (let result of solution) {
+          o.push(Sudoku.parseSolution(result))
+        }
+        return o
+      })
     return List.takeFirstOr(solutions, [])
   }
 

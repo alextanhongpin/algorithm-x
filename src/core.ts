@@ -106,15 +106,16 @@ export function smallestColumnSize(
   return c
 }
 
-export function search(
+export function* search(
   depth: number = 0,
   rootNode: Node,
   solution: Node[] = [],
-): Node[] {
+): IterableIterator<Node[]> {
   // Termination condition
   if (rootNode.right === rootNode) {
     // Return a copy without pointing back to the reference,
     // as the values might be replaced
+    console.log('[terminate]')
     return [...solution]
   }
   // Start with the smallest column node to minimize search
@@ -125,8 +126,11 @@ export function search(
     for (let j = r.right; j !== r; j = j.right) {
       cover(j)
     }
-    let result = search(depth + 1, rootNode, solution)
-    if (result) return result
+    yield [...solution]
+    let result = yield* search(depth + 1, rootNode, solution)
+    if (result) {
+      return result
+    }
     r = solution.pop() || r
     c = r.columnNode
     for (let j = r.left; j !== r; j = j.left) {
@@ -134,6 +138,7 @@ export function search(
     }
   }
   uncover(c)
+
 }
 
 function cover(node: Node): void {

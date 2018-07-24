@@ -3,7 +3,10 @@
 Sudoku solver implementing DLX (Dancing Links + Algorithm X) by Donald Knuth.
 
 
+
 ## Output
+
+![gif](./assets/sudoku.gif)
 
 ```
 INPUT 1:
