@@ -1,10 +1,14 @@
 import Sudoku from './sudoku';
-import { initializeMetadata } from './model';
+import {
+  initializeMetadata
+} from './model';
 import {
   search,
   initializeCircularDoublyLinkedToroidaList,
   initializeColumnLabels
 } from './core';
+import delay from './delay'
+
 
 async function main() {
   solveDancingLinks()
@@ -49,25 +53,25 @@ function solveSudoku() {
     '.......12........3..23..4....18....5.6..7.8.......9.....85.....9...4.5..47...6...'
   ]
 
-  inputs.map(function (input, i) {
+  inputs.map(async function(input, i) {
     console.time('benchmark')
     Sudoku.print(`INPUT ${i + 1}:`, Sudoku.fromString(input))
-    Sudoku.solve(input).map(async (solution, j) => {
-      // Add delay effect when displaying results
-      await delay(100 * j)
+    let j = 0
+    let solution = Array(9).fill(() => Array(9).fill(0)).map(fn => fn())
+    for await (let data of Sudoku.solve(input)) {
+      let {
+        row,
+        column,
+        value
+      } = data
+      solution[row][column] = value
       Sudoku.print(`OUTPUT ${i + 1} ITERATION=${j}:`, solution)
-      // console.log(`STRING ${i + 1}:`, Sudoku.toString(solution))
-    })
+      await delay(100)
+      j++
+    }
     console.timeEnd('benchmark')
   })
 }
 
-function delay(duration: number) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(duration)
-    }, duration)
-  })
-}
 
 main().catch(console.error)

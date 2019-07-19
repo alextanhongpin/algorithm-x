@@ -14,10 +14,9 @@ type ColumnLabels = string[]
 // initializeColumnLabels will create an array of labels from a given limit
 export function initializeColumnLabels(n: number): ColumnLabels {
   let labels = [...ALPHABETS]
-  if (n < labels.length) {
-    return labels.slice(0, n)
-  }
-  return Array(n).fill(0).map((_, i) => (i + 1).toString())
+  return n < labels.length ?
+    labels.slice(0, n) :
+    Array(n).fill(0).map((_, i) => (i + 1).toString())
 }
 
 export function initializeHeaderColumns(labels: ColumnLabels = []): Node {
@@ -39,8 +38,7 @@ export function initializeCircularDoublyLinkedToroidaList(
 ): Node {
   // Setup header node
   let rootNode = initializeHeaderColumns(columnLabels)
-  let dimension = (m: Metadata[]): [number, number] =>
-    [m.length, m[0].data.length]
+  let dimension = (m: Metadata[]): [number, number] => [m.length, m[0].data.length]
   let isOne = (n: number): boolean => n === 1
   let [maxRow, maxCol] = dimension(metadata)
   let isLastRow = (row: number): boolean => row === maxRow - 1
@@ -110,13 +108,13 @@ export function* search(
   depth: number = 0,
   rootNode: Node,
   solution: Node[] = [],
-): IterableIterator<Node[]> {
+): IterableIterator < Node[] > {
   // Termination condition
   if (rootNode.right === rootNode) {
     // Return a copy without pointing back to the reference,
     // as the values might be replaced
     console.log('[terminate]')
-    return [...solution]
+    yield [...solution]
   }
   // Start with the smallest column node to minimize search
   let c = smallestColumnSize(rootNode)
@@ -126,11 +124,8 @@ export function* search(
     for (let j = r.right; j !== r; j = j.right) {
       cover(j)
     }
-    yield [...solution]
-    let result = yield* search(depth + 1, rootNode, solution)
-    if (result) {
-      return result
-    }
+    yield* search(depth + 1, rootNode, solution)
+
     r = solution.pop() || r
     c = r.columnNode
     for (let j = r.left; j !== r; j = j.left) {
@@ -144,6 +139,7 @@ function cover(node: Node): void {
   let columnNode = node.columnNode
   columnNode.right.left = columnNode.left
   columnNode.left.right = columnNode.right
+
   for (let i = columnNode.down; i !== columnNode; i = i.down) {
     for (let j = i.right; j !== i; j = j.right) {
       j.down.up = j.up

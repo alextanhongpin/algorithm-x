@@ -1,5 +1,7 @@
 import List from './utils/list'
-import { Metadata, Node } from './model';
+import {
+  Metadata
+} from './model';
 import {
   search,
   initializeColumnLabels,
@@ -19,7 +21,7 @@ export default class Sudoku {
       i => i === Sudoku.DOT ? Sudoku.EMPTY : Number(i)
     )
     let size = Math.sqrt(parsed.length)
-    return List.chunk<number>(parsed, size)
+    return List.chunk < number > (parsed, size)
   }
 
   static boardFrom(input: number[][]) {
@@ -72,12 +74,22 @@ export default class Sudoku {
               column,
               value
             )
-            constraintMatrix.push({ row, column, value, data })
+            constraintMatrix.push({
+              row,
+              column,
+              value,
+              data
+            })
           }
           continue
         }
         let data = Sudoku.constraintMatrix(size, row, column, value)
-        constraintMatrix.push({ row, column, value, data })
+        constraintMatrix.push({
+          row,
+          column,
+          value,
+          data
+        })
       }
     }
     return constraintMatrix
@@ -86,32 +98,22 @@ export default class Sudoku {
   static solver(input: Metadata[]) {
     let columns = initializeColumnLabels(Sudoku.SIZE * Sudoku.SIZE * 4)
     let rootNode = initializeCircularDoublyLinkedToroidaList(input, columns)
-    return search(0, rootNode, [])
+    return search(0, rootNode)
   }
 
-  static solve(input: string) {
+  static * solve(input: string) {
     let solutions = [input]
       .map(Sudoku.fromString)
       .map(Sudoku.parseCells)
       .map(Sudoku.solver)
-      .map(function (solution) {
-        let o = []
-        for (let result of solution) {
-          o.push(Sudoku.parseSolution(result))
-        }
-        return o
-      })
-    return List.takeFirstOr(solutions, [])
-  }
 
-  static parseSolution(solution: Node[]): number[][] {
-    let grid = List.grid<number>(Sudoku.SIZE, 0)
-    solution.forEach((n: Node) => {
-      let m: Metadata = n.metadata
-      let { row, column, value } = m
-      grid[row][column] = value
-    })
-    return grid
+    let solution = solutions[0]
+
+    for (let solve of solution) {
+      for (let row of solve) {
+        yield row.metadata
+      }
+    }
   }
 
   static constraints(
@@ -148,7 +150,7 @@ export default class Sudoku {
       arr[index] = 1
       return arr
     })
-    return List.flatten<number>(matrices)
+    return List.flatten < number > (matrices)
   }
   static toString(output: number[][]): string {
     return output.map(rows =>
