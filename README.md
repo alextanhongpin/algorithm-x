@@ -119,10 +119,13 @@ For each r ← D[c], D[D[c]], . . . , while r != c
 Uncover column c and return
 ```
 
-# Rerefences
+# References
 https://www.ocf.berkeley.edu/~jchu/publicportal/sudoku/0011047.pdf
 https://www.kth.se/social/files/58861771f276547fe1dbf8d1/HLaestanderMHarrysson_dkand14.pdf
 
+## Other usecases
+
+We can use exact cover algorithmn to solve timetable planning too.
 
 ## Setup Typescript Testing
 
